@@ -1,0 +1,118 @@
+---NUMBER 2---
+
+<?php
+// Initialize variables
+$orderPrice = 0;
+$totalPrice = 0;
+$quantity = 0;
+$cash = 0;
+$change = 0;
+$message = "";
+
+// Prices for each menu item
+$menu = [
+    "burger" => 50,
+    "fries" => 75,
+    "steak" => 150
+];
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if form fields are set
+    if (isset($_POST['order'], $_POST['quantity'], $_POST['cash'])) {
+        $order = $_POST['order'];
+        $quantity = (int)$_POST['quantity'];
+        $cash = (int)$_POST['cash'];
+
+        // Validate form inputs
+        if ($quantity <= 0) {
+            $message = "Please enter a valid quantity.";
+        } elseif ($cash <= 0) {
+            $message = "Please enter a valid cash amount.";
+        } else {
+            // Calculate total price based on order and quantity
+            if (array_key_exists($order, $menu)) {
+                $orderPrice = $menu[$order];
+                $totalPrice = $orderPrice * $quantity;
+
+                // Check if the cash provided is enough
+                if ($cash >= $totalPrice) {
+                    $change = $cash - $totalPrice;
+                    $message = "
+                    <h2>RECEIPT</h2>
+                    <p>Total Price: $totalPrice</p>
+                    <p>You Paid: $cash</p>
+                    <p>CHANGE: $change</p>
+                    <p>" . date('m/d/Y h:i:s a') . "</p>";
+                } else {
+                    $message = "<p>Sorry, balance is not enough.</p>";
+                }
+            } else {
+                $message = "Invalid order selected.";
+            }
+        }
+    } else {
+        $message = "Please fill in all fields.";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order System</title>
+  </head>
+
+  <style>
+   tr, th, td{
+      border-style: double;
+      width: 30%; 
+    }
+  </style>
+
+  <body>
+    <h1>Menu</h1>
+    <table> 
+      <tr>
+        <th>Order</th>
+        <th>Amount</th>
+      </tr>
+      <tr>
+        <td>Burger</td>
+        <td>50</td>
+      </tr>
+      <tr>
+        <td>Fries</td>
+        <td>75</td>
+      </tr>
+      <tr>
+        <td>Steak</td>
+        <td>150</td>
+      </tr>
+    </table>
+   <p> 
+   <form action="" method="post">
+     <label for="order">Select an Order: </label>
+     <select name="order" id="order">
+       <option value="burger">Burger</option>
+       <option value="fries">Fries</option>
+       <option value="steak">Steak</option>
+      </select>
+      </p>
+      <label for="quantity">Quantity: </label>
+      <input type="number" id="quantity" name="quantity" min="1">
+      <br><br>
+      <label for="cash">Cash: </label>
+      <input type="number" id="cash" name="cash" min="1">
+      <br><br>
+      <input type="submit" value="Submit">
+   </form>
+
+   <!-- Display the receipt or error message -->
+   <div>
+     <?php echo $message; ?>
+   </div>
+  </body>
+</html>

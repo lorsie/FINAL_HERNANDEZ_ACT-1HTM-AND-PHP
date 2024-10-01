@@ -1,58 +1,118 @@
-
----NUMBER 1---
+---NUMBER 2---
 
 <?php
-session_start();
-$message = '';
+// Initialize variables
+$orderPrice = 0;
+$totalPrice = 0;
+$quantity = 0;
+$cash = 0;
+$change = 0;
+$message = "";
 
-$alreadyLoggedInUser = '';
+// Prices for each menu item
+$menu = [
+    "burger" => 50,
+    "fries" => 75,
+    "steak" => 150
+];
 
-// Handle login
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
-    $username = htmlspecialchars($_POST['username']);
-    $password = htmlspecialchars($_POST['password']);
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if form fields are set
+    if (isset($_POST['order'], $_POST['quantity'], $_POST['cash'])) {
+        $order = $_POST['order'];
+        $quantity = (int)$_POST['quantity'];
+        $cash = (int)$_POST['cash'];
 
-    // Check if the user is already logged in
-    if (isset($_SESSION['username'])) {
-        $message = $_SESSION['username'] . " is already logged in. Please log out first.";
-    } else {
-        if ($username === $alreadyLoggedInUser) {
-            $message = "$username is already logged in. Wait for him to log out first.";
+        // Validate form inputs
+        if ($quantity <= 0) {
+            $message = "Please enter a valid quantity.";
+        } elseif ($cash <= 0) {
+            $message = "Please enter a valid cash amount.";
         } else {
-            if (empty($username) || empty($password)) {
-                $message = "Both fields are required!";
-            } else {  
-                $_SESSION['username'] = $username;
-                $message = "<h3>User Logged in: $username</h3>";
+            // Calculate total price based on order and quantity
+            if (array_key_exists($order, $menu)) {
+                $orderPrice = $menu[$order];
+                $totalPrice = $orderPrice * $quantity;
+
+                // Check if the cash provided is enough
+                if ($cash >= $totalPrice) {
+                    $change = $cash - $totalPrice;
+                    $message = "
+                    <h2>RECEIPT</h2>
+                    <p>Total Price: $totalPrice</p>
+                    <p>You Paid: $cash</p>
+                    <p>CHANGE: $change</p>
+                    <p>" . date('m/d/Y h:i:s a') . "</p>";
+                } else {
+                    $message = "<p>Sorry, balance is not enough.</p>";
+                }
+            } else {
+                $message = "Invalid order selected.";
             }
         }
+    } else {
+        $message = "Please fill in all fields.";
     }
-}
-
-// Handle logout
-if (isset($_POST['logout'])) {
-    session_unset();
-    session_destroy();
-    $message = "You have been logged out!";
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form</title>
-    <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-    <form method="POST" action="">
-        <label for="username">Username: <input type="text" id="username" name="username"></label><br><br>
-        <label for="password">Password: <input type="password" id="password" name="password"></label><br><br>
-        <input type="submit" name="login" value="Login" class="button"><br><br>
-        <input type="submit" name="logout" value="Logout" class="button">
-    </form>
+    <title>Order System</title>
+  </head>
 
-    <p><?php echo $message; ?></p>
-</body>
+  <style>
+   tr, th, td{
+      border-style: double;
+      width: 30%; 
+    }
+  </style>
+
+  <body>
+    <h1>Menu</h1>
+    <table> 
+      <tr>
+        <th>Order</th>
+        <th>Amount</th>
+      </tr>
+      <tr>
+        <td>Burger</td>
+        <td>50</td>
+      </tr>
+      <tr>
+        <td>Fries</td>
+        <td>75</td>
+      </tr>
+      <tr>
+        <td>Steak</td>
+        <td>150</td>
+      </tr>
+    </table>
+   <p> 
+   <form action="" method="post">
+     <label for="order">Select an Order: </label>
+     <select name="order" id="order">
+       <option value="burger">Burger</option>
+       <option value="fries">Fries</option>
+       <option value="steak">Steak</option>
+      </select>
+      </p>
+      <label for="quantity">Quantity: </label>
+      <input type="number" id="quantity" name="quantity" min="1">
+      <br><br>
+      <label for="cash">Cash: </label>
+      <input type="number" id="cash" name="cash" min="1">
+      <br><br>
+      <input type="submit" value="Submit">
+   </form>
+
+   <!-- Display the receipt or error message -->
+   <div>
+     <?php echo $message; ?>
+   </div>
+  </body>
 </html>
